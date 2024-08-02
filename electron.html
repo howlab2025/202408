@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>동적 자기장 시각화</title>
+    <style>
+        canvas { border: 1px solid black; }
+    </style>
+</head>
+<body>
+    <h1>동적 자기장 시각화</h1>
+    <canvas id="magneticField" width="400" height="300"></canvas>
+    <br>
+    <button onclick="toggleAnimation()">애니메이션 시작/정지</button>
+
+    <script>
+        const canvas = document.getElementById('magneticField');
+        const ctx = canvas.getContext('2d');
+        let animationId;
+        let isAnimating = false;
+        let time = 0;
+
+        function drawMagnet() {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(175, 100, 50, 100);
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText('N', 190, 130);
+            ctx.fillText('S', 190, 180);
+        }
+
+        function drawFieldLines() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMagnet();
+
+            for (let x = 0; x <= canvas.width; x += 20) {
+                for (let y = 0; y <= canvas.height; y += 20) {
+                    let dx = x - 200;
+                    let dy = y - 150;
+                    let distance = Math.sqrt(dx*dx + dy*dy);
+                    let angle = Math.atan2(dy, dx);
+                    
+                    let fieldStrength = 1000 / (distance * distance);
+                    fieldStrength = Math.min(fieldStrength, 15);
+
+                    let waveOffset = Math.sin(time * 0.1 + distance * 0.05) * 5;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(
+                        x + Math.cos(angle) * (fieldStrength + waveOffset), 
+                        y + Math.sin(angle) * (fieldStrength + waveOffset)
+                    );
+                    ctx.strokeStyle = `hsl(${(distance + time) % 360}, 100%, 50%)`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function animate() {
+            time += 0.1;
+            drawFieldLines();
+            if (isAnimating) {
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            if (isAnimating) {
+                animate();
+            } else {
+                cancelAnimationFrame(animationId);
+            }
+        }
+
+        drawFieldLines();
+    </script>
+</body>
+</html>
